@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rungs · Puzzle Pantry</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <style>
+    .goal { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
+    .goal b { color: var(--ink); }
+    .ladder { display: flex; flex-direction: column; align-items: center; gap: 6px; max-height: 46vh; overflow: auto; padding: 4px 0; }
+    .word { display: flex; gap: 6px; }
+    .word span { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem; text-transform: uppercase; background: var(--panel); border: 2px solid var(--line); }
+    .word.start span { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .word.target span { background: var(--hit); color: #fff; border-color: var(--hit); }
+    .word.target.reached span { animation: pop 0.4s both; }
+    .word span.changed { border-color: var(--near); box-shadow: inset 0 -4px 0 var(--near); }
+    .word span.match { color: var(--hit); }
+    .word.typing span { border-style: dashed; }
+    .word.typing span.filled { border-style: solid; border-color: var(--muted); }
+    .word.hint span { border-color: var(--near); border-style: dotted; }
+    .gap { color: var(--muted); font-size: 0.8rem; }
+    .word.shake { animation: shake 0.4s; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+    @keyframes pop { 0% { transform: scale(0.7); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 380px; margin: 12px auto 0; }
+    .tools .btn { padding: 9px 6px; font-size: 0.9rem; }
+    .path { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="icon-btn" href="../">← Games</a>
+    <h1>Rungs</h1>
+    <div class="actions">
+      <button class="icon-btn" data-open="help">?</button>
+      <button class="icon-btn" id="statsBtn">Stats</button>
+    </div>
+  </header>
+  <main>
+    <div class="goal"><span id="pairInfo"></span><span>Par <b id="par"></b> · Steps <b id="steps">0</b></span></div>
+    <div class="ladder" id="ladder"></div>
+    <div id="result" class="result hidden">
+      <p id="resultText"></p>
+      <p class="path" id="pathText"></p>
+      <button class="btn" id="nextBtn">New ladder</button>
+    </div>
+    <div class="tools" id="tools">
+      <button class="btn secondary" id="undo">Undo</button>
+      <button class="btn secondary" id="hint">Hint</button>
+      <button class="btn secondary" id="giveUp">Show path</button>
+    </div>
+    <div id="keyboard" class="keyboard"></div>
+  </main>
+
+  <div class="modal-back" id="help">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>How to play</h2>
+      <p>Climb from the blue word to the green word. Each step changes exactly <b>one letter</b>, and every step must be a real word.</p>
+      <p>Example: COLD → CORD → WORD → WARD → WARM.</p>
+      <p><b>Par</b> is the fewest steps possible. Matching par is a perfect climb. A hint adds the next step on a shortest path from where you are.</p>
+      <p>Every ladder is a new random pair, and start words don't repeat until you've climbed from all of them.</p>
+    </div>
+  </div>
+  <div class="modal-back" id="stats">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>Your Rungs stats</h2>
+      <p class="path">Bars: 1 = at or under par, 2 = one over, 3 = two over, 4 = three or more over.</p>
+      <div id="statsBody"></div>
+    </div>
+  </div>
+
+  <script src="../js/common.js"></script>
+  <script src="../data/ladder.js"></script>
+  <script src="../data/solved.js"></script>
+  <script src="rungs.js"></script>
+</body>
+</html>

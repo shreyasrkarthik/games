@@ -23,28 +23,100 @@
     return a;
   }
 
-  // A deck deals every item once, in a random order, before reshuffling.
-  // The order and position are kept in localStorage, so an answer never
-  // repeats until the whole list has been played on this device.
-  function Deck(name, size) {
-    let st = load("deck:" + name, null);
+  // ---------- solved words ----------
+  // Words solved on this browser, plus words listed in data/solved.js
+  // (words you've sent over to be retired for good). Neither comes up again.
+  function solvedLocal(game) { return new Set(load("solved:" + game, [])); }
+  function addSolved(game, word) {
+    const s = solvedLocal(game);
+    s.add(word);
+    save("solved:" + game, [...s].sort());
+  }
+  function retired(game) {
+    const fromRepo = (window.SOLVED && window.SOLVED[game]) || [];
+    const all = solvedLocal(game);
+    fromRepo.forEach((w) => all.add(w));
+    return all;
+  }
+  // Export every game's solved words as plain text, one line per game.
+  function exportSolved(games) {
+    return games.map((g) => `${g}: ${[...solvedLocal(g)].sort().join(" ")}`).join("\n");
+  }
+  // Merge a pasted export into this browser. Returns how many words were new.
+  function importSolved(text, games) {
+    let added = 0;
+    text.split(/\n+/).forEach((line) => {
+      const m = line.match(/^\s*([a-z]+)\s*:\s*(.*)$/i);
+      if (!m || !games.includes(m[1].toLowerCase())) return;
+      const g = m[1].toLowerCase();
+      const s = solvedLocal(g);
+      (m[2].toLowerCase().match(/[a-z]+/g) || []).forEach((w) => {
+        if (!s.has(w)) { s.add(w); added++; }
+      });
+      save("solved:" + g, [...s].sort());
+    });
+    return added;
+  }
+
+  // A deck deals every word once, in a random order, before reshuffling.
+  // The order and position are kept in localStorage, so a word never repeats
+  // until the whole list has been played on this browser. Solved and retired
+  // words are skipped entirely.
+  function Deck(name, words, game) {
+    const key = "deck:" + name;
+    const valid = new Set(words);
+    let st = load(key, null);
     function fresh(round) {
-      const order = shuffle([...Array(size).keys()]);
-      st = { size, order, pos: 0, round };
-      save("deck:" + name, st);
+      st = { order: shuffle(words), pos: 0, round };
+      save(key, st);
     }
-    if (!st || st.size !== size || !Array.isArray(st.order)) fresh(1);
+    if (!st || !Array.isArray(st.order) || typeof st.order[0] !== "string") {
+      fresh(1);
+    } else {
+      // the word list may have changed since last visit: drop removed words,
+      // add new ones to the part not yet played
+      const played = st.order.slice(0, st.pos).filter((w) => valid.has(w));
+      const ahead = st.order.slice(st.pos).filter((w) => valid.has(w));
+      const known = new Set(st.order);
+      const added = shuffle(words.filter((w) => !known.has(w)));
+      st.order = played.concat(ahead, added);
+      st.pos = played.length;
+      save(key, st);
+    }
+    function skip() {
+      const gone = retired(game || name);
+      if (gone.size >= words.length) return; // everything solved: allow repeats
+      for (let guard = 0; guard < 2; guard++) {
+        while (st.pos < st.order.length && gone.has(st.order[st.pos])) st.pos++;
+        if (st.pos < st.order.length) break;
+        fresh(st.round + 1);
+      }
+      save(key, st);
+    }
     return {
       current() {
         if (st.pos >= st.order.length) fresh(st.round + 1);
         return st.order[st.pos];
       },
+      // move to the next word, skipping anything solved or retired
       advance() {
         st.pos += 1;
         if (st.pos >= st.order.length) fresh(st.round + 1);
-        else save("deck:" + name, st);
+        skip();
       },
-      left() { return st.order.length - st.pos; },
+      skipSolved() {
+        const before = st.order[st.pos];
+        skip();
+        return st.order[st.pos] !== before;
+      },
+      left() {
+        const gone = retired(game || name);
+        return st.order.slice(st.pos).filter((w) => !gone.has(w)).length;
+      },
+      total() {
+        const gone = retired(game || name);
+        return words.filter((w) => !gone.has(w)).length;
+      },
       round() { return st.round; },
     };
   }
@@ -122,5 +194,5 @@
     container.innerHTML = html;
   }
 
-  window.PP = { load, save, shuffle, Deck, toast, modal, recordResult, renderStats };
+  window.PP = { load, save, shuffle, Deck, toast, modal, recordResult, renderStats, addSolved, solvedLocal, exportSolved, importSolved };
 })();

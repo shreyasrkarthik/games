@@ -20,11 +20,15 @@
     .tile p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.35; }
     .tile .meta { margin-top: 10px; font-size: 0.8rem; color: var(--accent); font-weight: 600; }
     .tile.soon { opacity: 0.55; pointer-events: none; box-shadow: none; }
+    .sync-counts { font-weight: 600; }
+    .sync-tip { font-size: 0.85rem; color: var(--muted); }
+    .modal h3 { font-size: 1rem; margin: 18px 0 8px; }
+    textarea { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 8px; font: inherit; margin-bottom: 8px; }
     footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 28px; }
   </style>
 </head>
 <body>
-  <header class="topbar"><h1>Puzzle Pantry</h1></header>
+  <header class="topbar"><h1>Puzzle Pantry</h1><div class="actions"><button class="icon-btn" data-open="sync">Sync solved words</button></div></header>
   <main>
     <p class="intro">Unlimited word and logic games. Play as many rounds as you like, and answers don't repeat until you've seen them all.</p>
     <div class="grid">
@@ -33,6 +37,18 @@
         <h2>Fiver</h2>
         <p>Find the hidden 5-letter word in 6 guesses.</p>
         <div class="meta" data-meta="fiver"></div>
+      </a>
+      <a class="tile" href="rungs/">
+        <div class="art"><i style="background:var(--accent)">C</i><i style="background:var(--near)">O</i><i style="background:var(--near)">L</i><i style="background:var(--hit)">D</i></div>
+        <h2>Rungs</h2>
+        <p>Climb from one word to another, changing one letter at a time.</p>
+        <div class="meta" data-meta="rungs"></div>
+      </a>
+      <a class="tile" href="longtail/">
+        <div class="art"><i style="background:#7b8494">10</i><i style="background:var(--hit)">30</i><i style="background:var(--accent)">60</i><i style="background:#b4479a">99</i></div>
+        <h2>Long Tail</h2>
+        <p>Name something in a category. The rarer your answer, the more it scores.</p>
+        <div class="meta" data-meta="longtail"></div>
       </a>
       <a class="tile" href="digits/">
         <div class="art"><i style="background:var(--accent)">4</i><i style="background:var(--accent)">0</i><i style="background:var(--accent)">7</i><i style="background:var(--accent)">2</i></div>
@@ -49,11 +65,46 @@
     </div>
     <footer>Progress and stats are saved in this browser only.</footer>
   </main>
+  <div class="modal-back" id="sync">
+    <div class="modal">
+      <button class="close" aria-label="Close">×</button>
+      <h2>Sync solved words</h2>
+      <p>Words you solve in Fiver and Twister, and ladders you climb in Rungs, never come up again on this device. To skip them on another device too, copy your list here and paste it there.</p>
+      <p id="syncCounts" class="sync-counts"></p>
+      <button class="btn" id="copySolved">Copy my solved words</button>
+      <p class="sync-tip">Send the copied list to Claude to retire those words for good, on every device.</p>
+      <h3>Paste a list from another device</h3>
+      <textarea id="importBox" rows="4" placeholder="fiver: about crane ...&#10;twister: ...&#10;rungs: ..."></textarea>
+      <button class="btn secondary" id="importBtn">Add these words</button>
+    </div>
+  </div>
   <script src="js/common.js"></script>
   <script>
     document.querySelectorAll("[data-meta]").forEach((el) => {
       const s = PP.load("stats:" + el.dataset.meta, null);
-      el.textContent = s && s.played ? `${s.played} played · streak ${s.streak}` : "Play";
+      el.textContent = s && s.played ? (s.streak !== undefined ? `${s.played} played · streak ${s.streak}` : `${s.played} rounds · best ${s.best}`) : "Play";
+    });
+    const SYNC_GAMES = ["fiver", "twister", "rungs"];
+    function counts() {
+      document.getElementById("syncCounts").textContent =
+        SYNC_GAMES.map((g) => `${g[0].toUpperCase() + g.slice(1)}: ${PP.solvedLocal(g).size} solved`).join(" · ");
+    }
+    document.querySelector('[data-open="sync"]').addEventListener("click", counts);
+    document.getElementById("copySolved").addEventListener("click", async () => {
+      const text = PP.exportSolved(SYNC_GAMES);
+      try {
+        await navigator.clipboard.writeText(text);
+        PP.toast("Copied");
+      } catch (e) {
+        document.getElementById("importBox").value = text;
+        PP.toast("Couldn't copy, so the list is in the box below");
+      }
+    });
+    document.getElementById("importBtn").addEventListener("click", () => {
+      const n = PP.importSolved(document.getElementById("importBox").value, SYNC_GAMES);
+      PP.toast(n ? `Added ${n} word${n > 1 ? "s" : ""}` : "No new words found");
+      document.getElementById("importBox").value = "";
+      counts();
     });
   </script>
 </body>

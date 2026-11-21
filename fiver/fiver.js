@@ -3,7 +3,7 @@
   const ANSWERS = window.WORDS.answers;
   const VALID = new Set(window.WORDS.guesses);
   ANSWERS.forEach((w) => VALID.add(w));
-  const deck = PP.Deck(GAME, ANSWERS.length);
+  const deck = PP.Deck(GAME, ANSWERS, GAME);
 
   const boardEl = document.getElementById("board");
   const kbEl = document.getElementById("keyboard");
@@ -14,14 +14,15 @@
 
   // Game state is saved so a refresh resumes the same round.
   let st = PP.load("state:" + GAME, null);
-  if (!st || st.idx !== deck.current()) newRound();
+  const fresh = !st || st.word !== deck.current() || (!st.guesses.length && PP.solvedLocal(GAME).has(st.word));
+  if (fresh) { deck.skipSolved(); newRound(); }
   hardEl.checked = !!PP.load("hard:" + GAME, false);
 
   function newRound() {
-    st = { idx: deck.current(), guesses: [], cur: "", done: false, won: false };
+    st = { word: deck.current(), guesses: [], cur: "", done: false, won: false };
     PP.save("state:" + GAME, st);
   }
-  function answer() { return ANSWERS[st.idx]; }
+  function answer() { return st.word; }
 
   // Score a guess. Handles repeated letters: each letter in the answer can
   // only be "used" once, exact matches first.
@@ -99,7 +100,7 @@
       k.className = "key" + (ch.length > 1 ? " wide" : "") + (best[ch] ? " " + best[ch] : "");
     });
     hardEl.disabled = st.guesses.length > 0 && !st.done;
-    subEl.textContent = `Word ${ANSWERS.length - deck.left() + 1} of ${ANSWERS.length}` + (deck.round() > 1 ? ` · round ${deck.round()}` : "");
+    subEl.textContent = `Word ${deck.total() - deck.left() + 1} of ${deck.total()}` + (deck.round() > 1 ? ` · round ${deck.round()}` : "");
     if (st.done) {
       resultEl.classList.remove("hidden");
       resultText.innerHTML = st.won
@@ -165,6 +166,7 @@
   function finish(won) {
     st.done = true;
     st.won = won;
+    if (won) PP.addSolved(GAME, answer());
     PP.recordResult(GAME, won, st.guesses.length, ROWS);
     PP.toast(won ? ["Genius!", "Brilliant!", "Great!", "Nice!", "Solid.", "Phew!"][st.guesses.length - 1] : answer().toUpperCase(), 1800);
     setTimeout(() => showStats(won ? st.guesses.length : null), 1300);
@@ -178,7 +180,7 @@
   function showStats(last) {
     PP.renderStats(document.getElementById("statsBody"), GAME, ROWS, last);
     document.getElementById("deckInfo").textContent =
-      `${deck.left()} new words left before the list reshuffles.`;
+      `${PP.solvedLocal(GAME).size} words solved on this device. ${deck.left()} new words left before the list reshuffles.`;
     PP.modal("stats", true);
   }
 

@@ -3,16 +3,17 @@
   const ANSWERS = window.WORDS.answers;
   const VALID = new Set(window.WORDS.guesses);
   ANSWERS.forEach((w) => VALID.add(w));
-  const deck = PP.Deck(GAME, ANSWERS.length);
+  const deck = PP.Deck(GAME, ANSWERS, GAME);
 
   const ansEl = document.getElementById("answer");
   const letEl = document.getElementById("letters");
   const resultEl = document.getElementById("result");
 
   let st = PP.load("state:" + GAME, null);
-  if (!st || st.idx !== deck.current()) newRound();
+  const fresh = !st || st.word !== deck.current() || (!st.hints && st.slots.every((x) => x === null) && PP.solvedLocal(GAME).has(st.word));
+  if (fresh) { deck.skipSolved(); newRound(); }
 
-  function word() { return ANSWERS[st.idx]; }
+  function word() { return st.word; }
   function sortKey(w) { return w.split("").sort().join(""); }
   function scramble(w) {
     let s = w;
@@ -20,8 +21,8 @@
     return s.split("");
   }
   function newRound() {
-    const w = ANSWERS[deck.current()];
-    st = { idx: deck.current(), letters: scramble(w), slots: Array(LEN).fill(null), locked: [], hints: 0, done: false, won: false };
+    const w = deck.current();
+    st = { word: w, letters: scramble(w), slots: Array(LEN).fill(null), locked: [], hints: 0, done: false, won: false };
     PP.save("state:" + GAME, st);
   }
   function usedTiles() { return new Set(st.slots.filter((x) => x !== null)); }
@@ -47,7 +48,7 @@
       letEl.appendChild(b);
     });
     document.getElementById("sub").textContent =
-      `Word ${ANSWERS.length - deck.left() + 1} of ${ANSWERS.length}` + (st.hints ? ` · ${st.hints} hint${st.hints > 1 ? "s" : ""} used` : "");
+      `Word ${deck.total() - deck.left() + 1} of ${deck.total()}` + (st.hints ? ` · ${st.hints} hint${st.hints > 1 ? "s" : ""} used` : "");
     document.getElementById("hint").disabled = st.done || st.hints >= MAXHINT;
     ["mix", "clear", "skip"].forEach((id) => (document.getElementById(id).disabled = st.done));
     resultEl.classList.toggle("hidden", !st.done);
@@ -107,6 +108,7 @@
       if (g === word() || (VALID.has(g) && sortKey(g) === sortKey(word()))) {
         st.done = true;
         st.won = true;
+        PP.addSolved(GAME, word());
         PP.recordResult(GAME, true, st.hints + 1, LEN);
         PP.toast(st.hints ? "Solved!" : "Clean solve!");
       } else {
