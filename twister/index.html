@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Twister · Puzzle Pantry</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <style>
+    .sub { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+    .answer, .letters { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+    .slot, .tile {
+      width: 54px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; font-weight: 800; text-transform: uppercase; user-select: none;
+    }
+    .slot { border: 2px solid var(--line); background: var(--panel); cursor: pointer; }
+    .slot.locked { background: var(--hit); color: #fff; border-color: var(--hit); cursor: default; }
+    .slot.solved { background: var(--hit); color: #fff; border-color: var(--hit); }
+    .tile { background: var(--near); color: #fff; border: 0; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.1s, opacity 0.1s; }
+    .tile.used { opacity: 0.2; transform: scale(0.9); cursor: default; }
+    .answer.shake { animation: shake 0.4s; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+    .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 380px; margin: 18px auto 0; }
+    .controls .btn { padding: 10px 6px; font-size: 0.9rem; }
+    .note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="icon-btn" href="../">← Games</a>
+    <h1>Twister</h1>
+    <div class="actions">
+      <button class="icon-btn" data-open="help">?</button>
+      <button class="icon-btn" id="statsBtn">Stats</button>
+    </div>
+  </header>
+  <main>
+    <div class="sub" id="sub"></div>
+    <div class="answer" id="answer"></div>
+    <div class="letters" id="letters"></div>
+    <div id="result" class="result hidden">
+      <p id="resultText"></p>
+      <button class="btn" id="nextBtn">Next word</button>
+    </div>
+    <div class="controls" id="controls">
+      <button class="btn secondary" id="mix">Shuffle</button>
+      <button class="btn secondary" id="clear">Clear</button>
+      <button class="btn secondary" id="hint">Hint</button>
+      <button class="btn secondary" id="skip">Give up</button>
+    </div>
+    <p class="note">Tap letters (or type) to fill the word. Tap a filled box to remove a letter.</p>
+  </main>
+
+  <div class="modal-back" id="help">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>How to play</h2>
+      <p>The five orange letters spell a common word. Put them in order.</p>
+      <p>Any real word that uses exactly those letters counts. A hint locks the next letter in place. Solving with fewer hints keeps your stats looking good.</p>
+      <p>Words don't repeat until you've seen all 1,800.</p>
+    </div>
+  </div>
+  <div class="modal-back" id="stats">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>Your Twister stats</h2>
+      <p class="note" style="text-align:left">Bars show solves by hints used (1 = no hints, 2 = one hint, and so on).</p>
+      <div id="statsBody"></div>
+    </div>
+  </div>
+
+  <script src="../js/common.js"></script>
+  <script src="../data/words.js"></script>
+  <script src="twister.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lockpick · Puzzle Pantry</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <style>
+    .sub { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
+    .entry { display: flex; justify-content: center; gap: 8px; margin: 6px 0 12px; }
+    .slot { width: 52px; height: 60px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; }
+    .slot.on { border-color: var(--accent); }
+    .history { max-width: 360px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; max-height: 38vh; overflow: auto; }
+    .hrow { display: flex; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; }
+    .hrow .n { color: var(--muted); font-size: 0.8rem; width: 22px; }
+    .hrow .code { font-size: 1.3rem; font-weight: 800; letter-spacing: 0.3em; flex: 1; }
+    .pegs { display: flex; gap: 4px; }
+    .peg { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); }
+    .peg.hit { background: var(--hit); border-color: var(--hit); }
+    .peg.near { background: var(--near); border-color: var(--near); }
+    .counts { font-size: 0.8rem; color: var(--muted); margin-left: 10px; min-width: 70px; text-align: right; }
+    .pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 360px; margin: 14px auto 0; }
+    .pad .key { max-width: none; font-size: 1.3rem; }
+    .pad .key.out { text-decoration: line-through; opacity: 0.35; }
+    .actions-row { display: flex; gap: 8px; max-width: 360px; margin: 8px auto 0; }
+    .actions-row .btn { flex: 1; }
+    .note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+    .opts { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .opts .icon-btn.sel { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="icon-btn" href="../">← Games</a>
+    <h1>Lockpick</h1>
+    <div class="actions">
+      <button class="icon-btn" data-open="help">?</button>
+      <button class="icon-btn" id="statsBtn">Stats</button>
+    </div>
+  </header>
+  <main>
+    <div class="opts" id="opts">
+      <button class="icon-btn" data-len="3">3 digits</button>
+      <button class="icon-btn" data-len="4">4 digits</button>
+      <button class="icon-btn" data-len="5">5 digits</button>
+    </div>
+    <div class="sub" id="sub"></div>
+    <div class="entry" id="entry"></div>
+    <div class="history" id="history"></div>
+    <div id="result" class="result hidden">
+      <p id="resultText"></p>
+      <button class="btn" id="nextBtn">New code</button>
+    </div>
+    <div class="pad" id="pad"></div>
+    <div class="actions-row">
+      <button class="btn secondary" id="back">⌫ Delete</button>
+      <button class="btn" id="enter">Try code</button>
+    </div>
+    <p class="note">Long-press (or right-click) a digit to cross it out as a note.</p>
+  </main>
+
+  <div class="modal-back" id="help">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>How to play</h2>
+      <p>A secret code is made of different digits (no digit repeats). Crack it in 10 tries.</p>
+      <ul>
+        <li><span class="peg hit" style="display:inline-block"></span> a <b>hit</b>: right digit, right place.</li>
+        <li><span class="peg near" style="display:inline-block"></span> a <b>near</b>: right digit, wrong place.</li>
+      </ul>
+      <p>The pegs don't tell you <i>which</i> digits matched. That's the puzzle.</p>
+    </div>
+  </div>
+  <div class="modal-back" id="stats">
+    <div class="modal">
+      <button class="close">×</button>
+      <h2>Your Lockpick stats</h2>
+      <div id="statsBody"></div>
+    </div>
+  </div>
+
+  <script src="../js/common.js"></script>
+  <script src="digits.js"></script>
+</body>
+</html>

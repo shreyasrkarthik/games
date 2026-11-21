@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Puzzle Pantry</title>
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    .intro { color: var(--muted); margin: 4px 0 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+    .tile {
+      display: block; text-decoration: none; color: var(--ink); background: var(--panel);
+      border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow);
+      transition: transform 0.12s, border-color 0.12s;
+    }
+    .tile:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .tile .art { display: flex; gap: 4px; margin-bottom: 12px; }
+    .tile .art i { width: 22px; height: 22px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 0.75rem; color: #fff; }
+    .tile h2 { margin: 0 0 4px; font-size: 1.1rem; }
+    .tile p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.35; }
+    .tile .meta { margin-top: 10px; font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+    .tile.soon { opacity: 0.55; pointer-events: none; box-shadow: none; }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <header class="topbar"><h1>Puzzle Pantry</h1></header>
+  <main>
+    <p class="intro">Unlimited word and logic games. Play as many rounds as you like, and answers don't repeat until you've seen them all.</p>
+    <div class="grid">
+      <a class="tile" href="fiver/">
+        <div class="art"><i style="background:var(--hit)">F</i><i style="background:var(--near)">I</i><i style="background:var(--miss)">V</i><i style="background:var(--hit)">E</i><i style="background:var(--hit)">R</i></div>
+        <h2>Fiver</h2>
+        <p>Find the hidden 5-letter word in 6 guesses.</p>
+        <div class="meta" data-meta="fiver"></div>
+      </a>
+      <a class="tile" href="digits/">
+        <div class="art"><i style="background:var(--accent)">4</i><i style="background:var(--accent)">0</i><i style="background:var(--accent)">7</i><i style="background:var(--accent)">2</i></div>
+        <h2>Lockpick</h2>
+        <p>Crack a 4-digit code using hits and near-misses.</p>
+        <div class="meta" data-meta="lockpick"></div>
+      </a>
+      <a class="tile" href="twister/">
+        <div class="art"><i style="background:var(--near)">T</i><i style="background:var(--near)">L</i><i style="background:var(--near)">E</i><i style="background:var(--near)">S</i><i style="background:var(--near)">I</i></div>
+        <h2>Twister</h2>
+        <p>Unscramble five letters into a word. Hints if you get stuck.</p>
+        <div class="meta" data-meta="twister"></div>
+      </a>
+    </div>
+    <footer>Progress and stats are saved in this browser only.</footer>
+  </main>
+  <script src="js/common.js"></script>
+  <script>
+    document.querySelectorAll("[data-meta]").forEach((el) => {
+      const s = PP.load("stats:" + el.dataset.meta, null);
+      el.textContent = s && s.played ? `${s.played} played · streak ${s.streak}` : "Play";
+    });
+  </script>
+</body>
+</html>
