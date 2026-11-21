@@ -230,11 +230,15 @@
     PP.modal("stats", true);
   });
   // closing the help shouldn't eat the clock: restart the timer for this prompt
+  function restartAfterHelp() {
+    if (!st.done && st.answers[st.i] === undefined) { st.startedAt = null; save(); startTimer(); els.input.focus(); }
+  }
   document.getElementById("help").addEventListener("click", (e) => {
-    if ((e.target.matches(".close") || e.target.id === "help") && !st.done && st.answers[st.i] === undefined) {
-      st.startedAt = null; save(); startTimer(); els.input.focus();
-    }
+    if (e.target.matches(".close") || e.target.id === "help") restartAfterHelp();
   });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("help").classList.contains("open")) setTimeout(restartAfterHelp, 0);
+  }, true);
 
   if (!PP.load("seenHelp:" + GAME, false)) {
     PP.save("seenHelp:" + GAME, true);
